@@ -24,8 +24,7 @@ gas_price = 500
 
 wallet_manager = WalletManager()
 wallet_manager.open_wallet(wallet_path)
-# password = input('password: ')
-password = 'password'
+password = input('password: ')
 acct = wallet_manager.get_account('AKeDu9QW6hfAhwpvCwNNwkEQt1LkUQpBpW', password)
 with open(os.path.join(contracts_folder, 'hello_python.abi.json')) as f:
     CONTRACT_ABI = json.loads(f.read())
@@ -57,18 +56,24 @@ class TestInvokeSavingPot(unittest.TestCase):
     def test_put_list(self):
         list_args = [0, 1, 1024, 2048]
         tx_hash = hello_python.put_list(list_args, acct, acct, gas_limit, gas_price)
-        print(tx_hash)
+        time.sleep(6)
+        event = hello_python.query_put_list_event(tx_hash)
+        self.assertIn('put list', event)
+        self.assertIn(list_args, event)
+
+    def test_get_list(self):
+        list_args = hello_python.get_list()
+        print(list_args)
 
     def test_put_dict(self):
         dict_args = {'key1': 'value1', 'key2': 'value2'}
         tx_hash = hello_python.put_dict(dict_args, acct, acct, gas_limit, gas_price)
-        print(tx_hash)
+        time.sleep(6)
+        event = hello_python.query_put_dict_value_event(tx_hash)
+        self.assertIn('put dict value', event)
 
     def test_get_dict(self):
         print(hello_python.get_dict())
-
-    def test_get_list(self):
-        print(hello_python.get_list())
 
 
 if __name__ == '__main__':

@@ -85,8 +85,47 @@ class InvokeHelloPython(object):
                                                        gas_price, put_list, False)
         return tx_hash
 
+    def query_put_list_event(self, tx_hash):
+        event = self.__sdk.rpc.get_smart_contract_event_by_tx_hash(tx_hash)
+        event = event.get('Notify', list())
+        if len(event) == 0:
+            return event
+        event = event[0]
+        event = event.get('States', list())
+        if len(event) == 0:
+            return event
+        event[0] = binascii.a2b_hex(event[0]).decode('ascii')
+        event[1] = list(map(lambda e: int(''.join(reversed([e[i:i + 2] for i in range(0, len(e), 2)])), 16), event[1]))
+        return event
+
     def get_list(self):
         get_list = self.__abi_info.get_function('get_list')
         response = self.__sdk.neo_vm().send_transaction(self.__contract_address_bytearray, None, None, 0, 0, get_list,
                                                         True)
         return response
+
+    def add_key_value_in_dict(self, key, value, acct: Account, payer_acct: Account, gas_limit: int, gas_price: int):
+        add_key_value_in_dict = self.__abi_info.get_function('add_key_value_in_dict')
+        add_key_value_in_dict.set_params_value((key, value))
+        tx_hash = self.__sdk.neo_vm().send_transaction(self.__contract_address_bytearray, acct, payer_acct, gas_limit,
+                                                       gas_price)
+        return tx_hash
+
+    def get_value_by_key(self, key, acct: Account, payer_acct: Account, gas_limit: int, gas_price: int):
+        get_value_by_key = self.__abi_info.get_function('get_value_by_key')
+        get_value_by_key.set_params_value((key,))
+        response = self.__sdk.neo_vm().send_transaction(self.__contract_address_bytearray, acct, payer_acct, gas_limit,
+                                                        gas_price)
+        return response
+
+    def query_put_dict_value_event(self, tx_hash):
+        event = self.__sdk.rpc.get_smart_contract_event_by_tx_hash(tx_hash)
+        event = event.get('Notify', list())
+        if len(event) == 0:
+            return event
+        event = event[0]
+        event = event.get('States', list())
+        if len(event) == 0:
+            return event
+        event[0] = binascii.a2b_hex(event[0]).decode('ascii')
+        return event
