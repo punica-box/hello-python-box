@@ -3,9 +3,10 @@
 
 import binascii
 
-from ontology.common.address import Address
 from ontology.ont_sdk import OntologySdk
+from ontology.common.address import Address
 from ontology.account.account import Account
+from ontology.utils.util import deserialize_hex
 from ontology.smart_contract.neo_contract.abi.abi_info import AbiInfo
 
 
@@ -74,8 +75,32 @@ class InvokeHelloPython(object):
         get_dict = self.__abi_info.get_function('get_dict')
         response = self.__sdk.neo_vm().send_transaction(self.__contract_address_bytearray, None, None, 0, 0, get_dict,
                                                         True)
-        print(response)
-        response = binascii.a2b_hex(response)
+        return response
+
+    def put_dict_value(self, dict_value_args, acct: Account, payer_acct: Account, gas_limit: int,
+                       gas_price: int) -> str:
+        put_dict_value = self.__abi_info.get_function('put_dict_value')
+        put_dict_value.set_params_value((dict_value_args,))
+        tx_hash = self.__sdk.neo_vm().send_transaction(self.__contract_address_bytearray, acct, payer_acct, gas_limit,
+                                                       gas_price, put_dict_value, False)
+        return tx_hash
+
+    def query_put_dict_value_event(self, tx_hash):
+        event = self.__sdk.rpc.get_smart_contract_event_by_tx_hash(tx_hash)
+        event = event.get('Notify', list())
+        if len(event) == 0:
+            return event
+        event = event[0]
+        event = event.get('States', list())
+        if len(event) == 0:
+            return event
+        event[0] = binascii.a2b_hex(event[0]).decode('ascii')
+        return event
+
+    def get_dict_value(self):
+        get_dict_value = self.__abi_info.get_function('get_dict_value')
+        response = self.__sdk.neo_vm().send_transaction(self.__contract_address_bytearray, None, None, 0, 0,
+                                                        get_dict_value, True)
         return response
 
     def put_list(self, list_args: list, acct: Account, payer_acct: Account, gas_limit: int, gas_price: int):
@@ -108,17 +133,10 @@ class InvokeHelloPython(object):
         add_key_value_in_dict = self.__abi_info.get_function('add_key_value_in_dict')
         add_key_value_in_dict.set_params_value((key, value))
         tx_hash = self.__sdk.neo_vm().send_transaction(self.__contract_address_bytearray, acct, payer_acct, gas_limit,
-                                                       gas_price)
+                                                       gas_price, add_key_value_in_dict, False)
         return tx_hash
 
-    def get_value_by_key(self, key, acct: Account, payer_acct: Account, gas_limit: int, gas_price: int):
-        get_value_by_key = self.__abi_info.get_function('get_value_by_key')
-        get_value_by_key.set_params_value((key,))
-        response = self.__sdk.neo_vm().send_transaction(self.__contract_address_bytearray, acct, payer_acct, gas_limit,
-                                                        gas_price)
-        return response
-
-    def query_put_dict_value_event(self, tx_hash):
+    def query_add_key_value_in_dict_event(self, tx_hash):
         event = self.__sdk.rpc.get_smart_contract_event_by_tx_hash(tx_hash)
         event = event.get('Notify', list())
         if len(event) == 0:
@@ -127,5 +145,13 @@ class InvokeHelloPython(object):
         event = event.get('States', list())
         if len(event) == 0:
             return event
-        event[0] = binascii.a2b_hex(event[0]).decode('ascii')
+        event[:3] = list(map(lambda e: binascii.a2b_hex(e).decode('ascii'), event[:3]))
+        event[3] = {k.decode('ascii'): v.decode('ascii') for k, v in deserialize_hex(event[3]).items()}
         return event
+
+    def get_value_by_key(self, key, acct: Account, payer_acct: Account, gas_limit: int, gas_price: int):
+        get_value_by_key = self.__abi_info.get_function('get_value_by_key')
+        get_value_by_key.set_params_value((key,))
+        response = self.__sdk.neo_vm().send_transaction(self.__contract_address_bytearray, acct, payer_acct, gas_limit,
+                                                        gas_price)
+        return response
