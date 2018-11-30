@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 from boa.interop.System.Runtime import Notify
 from boa.interop.System.Storage import Put, Get, GetContext
 from boa.interop.System.Runtime import Serialize, Deserialize
@@ -38,28 +35,26 @@ def echo(msg):
 
 
 def notify_args(bool_args, int_args, list_args, str_args, bytes_address_args):
-    Notify(['notify_args', bool_args, int_args, list_args, str_args, bytes_address_args])
+    Notify(['notify args', bool_args, int_args, list_args, str_args, bytes_address_args])
 
 
 def put_dict(dict_args):
     dict_info = Serialize(dict_args)
     Put(CTX, 'dict', dict_info)
-    Notify(['put dict', dict_args, dict_info])
+    Notify(['put dict', dict_info])
 
 
 def get_dict():
-    new_dict = {}
-    new_dict_info = Get(CTX, 'dict')
-    if new_dict_info:
-        new_dict = Deserialize(new_dict_info)
-    return new_dict
+    dict_info = Get(CTX, 'dict')
+    return dict_info
 
 
 def put_dict_value(dict_value_args):
-    new_dict = {'key': dict_value_args}
+    new_dict = {}
+    new_dict['key'] = dict_value_args
     new_dict_info = Serialize(new_dict)
     Put(CTX, 'dict', new_dict_info)
-    Notify(['put dict value', new_dict, new_dict_info])
+    Notify(['put dict value', new_dict_info])
 
 
 def get_dict_value():
@@ -78,7 +73,7 @@ def add_key_value_in_dict(key, value):
     new_dict[key] = value
     new_dict_info = Serialize(new_dict)
     Put(CTX, 'new_dict', new_dict_info)
-    Notify(['add_key_value_in_dict', key, value, new_dict_info])
+    Notify(['add key value in dict', key, value, new_dict_info])
 
 
 def get_value_by_key(key):
