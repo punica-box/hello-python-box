@@ -26,9 +26,7 @@ wallet_manager = WalletManager()
 wallet_manager.open_wallet(wallet_path)
 password = input('password: ')
 acct = wallet_manager.get_account('AKeDu9QW6hfAhwpvCwNNwkEQt1LkUQpBpW', password)
-with open(os.path.join(contracts_folder, 'hello_python.abi.json')) as f:
-    CONTRACT_ABI = json.loads(f.read())
-hello_python = InvokeHelloPython(ontology, CONTRACT_ABI, contract_address_hex)
+hello_python = InvokeHelloPython(ontology, contract_address_hex)
 
 
 class TestInvokeSavingPot(unittest.TestCase):
@@ -42,7 +40,7 @@ class TestInvokeSavingPot(unittest.TestCase):
         int_args = 1024
         list_args = [0, 1, 1024, 2048]
         str_args = 'Hello, Ontology'
-        bytes_address_args = acct.get_address().to_array()
+        bytes_address_args = acct.get_address().to_bytes()
         tx_hash = hello_python.notify_args(bool_args, int_args, list_args, str_args, bytes_address_args, acct, acct,
                                            gas_limit, gas_price)
         time.sleep(6)
